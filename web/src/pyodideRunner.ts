@@ -3,7 +3,9 @@ import { PYTHON_PRELUDE } from './pythonPrelude'
 import type { Game } from './types'
 
 const PYODIDE_VERSION = '0.26.4'
-const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
+/** 本地自托管目录（web/public/pyodide/，由 Vite 构建进产物）；不存在时回退 CDN */
+const PYODIDE_LOCAL_BASE = '/pyodide/'
+const PYODIDE_CDN_BASE = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
 const CANVAS_W = 800
 const CANVAS_H = 520
 
@@ -52,7 +54,24 @@ declare global {
 }
 
 let pyodidePromise: Promise<PyodideAPI> | null = null
+let pyodideBasePromise: Promise<string> | null = null
 let teardownCurrent: (() => void) | null = null
+
+/** 解析 Pyodide 基础地址：优先本地自托管（/pyodide/），不可用再回退 jsDelivr CDN */
+function resolvePyodideBase(): Promise<string> {
+  if (!pyodideBasePromise) {
+    pyodideBasePromise = (async () => {
+      try {
+        const res = await fetch(`${PYODIDE_LOCAL_BASE}pyodide.js`, { method: 'HEAD' })
+        if (res.ok) return PYODIDE_LOCAL_BASE
+      } catch {
+        /* 本地未部署则使用 CDN */
+      }
+      return PYODIDE_CDN_BASE
+    })()
+  }
+  return pyodideBasePromise
+}
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -67,9 +86,10 @@ function loadScript(src: string): Promise<void> {
 function ensurePyodide(onStatus: (s: string) => void): Promise<PyodideAPI> {
   if (!pyodidePromise) {
     pyodidePromise = (async () => {
+      const base = await resolvePyodideBase()
       onStatus('正在下载 Python 运行环境（首次约 10MB，请稍等）…')
-      if (!window.loadPyodide) await loadScript(`${PYODIDE_BASE}pyodide.js`)
-      const py = await window.loadPyodide!({ indexURL: PYODIDE_BASE })
+      if (!window.loadPyodide) await loadScript(`${base}pyodide.js`)
+      const py = await window.loadPyodide!({ indexURL: base })
       onStatus('Python 环境就绪')
       return py
     })().catch((err) => {
