@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>童趣游戏屋 · 儿童游戏网站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Quicksand:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600;700&family=Patrick+Hand&family=Lora:wght@400;500;600&family=Crimson+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #F7F9F4;
+    color: #1F2937;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  :root {
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-serif: 'Plus Jakarta Sans', sans-serif;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-display-style: normal;
+    --c-surface: #FFFFFF;
+    --c-surface-2: #F9FAFB;
+    --c-surface-3: #F3F4F6;
+    --c-border: #E5E7EB;
+    --c-border-strong: #D1D5DB;
+    --c-ink: #1F2937;
+    --c-ink-2: #4B5563;
+    --c-ink-3: #6B7280;
+    --c-ink-4: #9CA3AF;
+    --c-accent: #10B981;
+    --c-accent-2: #FB7299;
+    --c-accent-soft: #ECFDF5;
+    --c-success: #22C55E;
+    --radius-sm:    10px;
+    --radius:       14px;
+    --radius-lg:    18px;
+    --radius-xl:    24px;
+    --c-accent-deep:#059669;
+    --c-warning:    #F59E0B;
+  }
+  .page {
+    position: relative;
+    width: 1440px;
+    height: 2200px;
+    margin: 0 auto;
+    background: #F7F9F4;
+    overflow: hidden;
+  }
+
+  /* Force inspector-set props onto each component's own root node (mirrors the
+     canvas behaviour so exports stay visually identical). Text props cascade
+     to all inner text; surface props stay on the root. */
+  .el-inner[style*="--insp-bg:"] > :first-child { background-color: var(--insp-bg) !important; background-image: none !important; }
+  .el-inner[style*="--insp-bg-grad:"] > :first-child { background: var(--insp-bg-grad) !important; }
+  .el-inner[style*="--insp-color"] > :first-child,
+  .el-inner[style*="--insp-color"] > :first-child * { color: var(--insp-color) !important; }
+  .el-inner[style*="--insp-radius"] > :first-child { border-radius: var(--insp-radius) !important; }
+  .el-inner[style*="--insp-padding"] > :first-child { padding: var(--insp-padding) !important; }
+  .el-inner[style*="--insp-fs"] > :first-child,
+  .el-inner[style*="--insp-fs"] > :first-child * { font-size: var(--insp-fs) !important; }
+  .el-inner[style*="--insp-fw"] > :first-child,
+  .el-inner[style*="--insp-fw"] > :first-child * { font-weight: var(--insp-fw) !important; }
+  .el-inner[style*="--insp-ta"] > :first-child,
+  .el-inner[style*="--insp-ta"] > :first-child * { text-align: var(--insp-ta) !important; }
+  .el-inner[style*="--insp-bw"] > :first-child { border: var(--insp-bw) solid var(--insp-bc, #E4E4E7) !important; }
+  .el-inner[style*="--insp-shadow"] > :first-child { box-shadow: var(--insp-shadow) !important; }
+
+/* Shared by the canvas, template previews and exported pages. */
+.el-inner[data-component-layout] > :first-child {
+  min-width:0;min-height:0;max-width:100%;box-sizing:border-box;
+  overflow:auto !important;overscroll-behavior:contain;overflow-wrap:anywhere;
+}
+.el-inner[data-component-layout] > :first-child :is(div,span,p,h1,h2,h3) { min-width:0; }
+.el-inner[data-component-layout] [data-tkey] { overflow-wrap:anywhere; }
+.el-inner[data-component-layout] :is(svg,img) { flex-shrink:0; }
+.el-inner[data-component-layout="flow"] > [style*="flex-direction:column"] > * { flex-shrink:0 !important; }
+.el-inner[data-component-layout="flow"] > [style*="justify-content:center"] { justify-content:safe center !important; }
+.el-inner[data-component-layout="flow"] > [style*="align-items:center"] { align-items:safe center !important; }
+.el-inner[data-component-layout][data-component-type="table"] > :first-child > * { min-width:460px;flex-shrink:0; }
+.el-inner[data-component-type="pricing"] > :first-child { grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)) !important; }
+.el-inner:is([data-component-type="features-grid"],[data-component-type="grid"]) > :first-child { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)) !important; }
+.el-inner[data-component-type="stats-row"] > :first-child { grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr)) !important;row-gap:16px; }
+.el-inner:is([data-component-type="pricing"],[data-component-type="features-grid"],[data-component-type="stats-row"],[data-component-type="grid"]) > :first-child { grid-auto-rows:minmax(min-content,1fr); }
+.el-inner[data-component-type="cta-banner"] > :first-child { flex-wrap:wrap;align-content:safe center;row-gap:12px; }
+.el-inner[data-component-type="cta-banner"] > :first-child > :first-child { flex:1 1 240px; }
+.el-inner[data-component-type="logo-cloud"] > :first-child { flex-wrap:wrap;align-content:safe center; }
+
+</style>
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="page">
+    <div class="el-inner" data-component-layout="flow" data-component-type="topbar" style="position:absolute;left:0px;right:auto;top:0px;bottom:auto;width:1440px;height:64px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);color:var(--c-ink);display:flex;align-items:center;justify-content:space-between;padding:0 32px;font-family:var(--font-sans);border-bottom:1px solid var(--c-border);">
+        <div style="display:flex;align-items:center;gap:32px;">
+          <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:20px;font-weight:500;"><span data-tkey="brand">童趣游戏屋 🎈</span></div>
+          <div style="display:flex;gap:20px;font-size:13px;color:var(--c-ink-2);">
+            <span data-tkey="nav1">首页</span><span data-tkey="nav2">Python 游戏</span><span data-tkey="nav3">HTML5 游戏</span><span data-tkey="nav4">家长中心</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--c-ink-3);"><span data-tkey="signin">登录</span></span>
+          <div style="padding:8px 16px;background:var(--c-accent);color:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:600;"><span data-tkey="cta">开始玩</span></div>
+        </div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="hero-centered" style="position:absolute;left:0px;right:auto;top:64px;bottom:auto;width:1440px;height:420px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 80px;font-family:var(--font-sans);border:1px solid var(--c-border);">
+        <div style="padding:6px 14px;border:1px solid var(--c-border-strong);border-radius:99px;font-family:var(--font-mono);font-size:11px;color:var(--c-ink-2);margin-bottom:20px;"><span data-tkey="badge">🎮 6-12 岁专属 · 全部免费畅玩</span></div>
+        <h1 style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:56px;line-height:1.08;margin:0 0 16px;font-weight:500;letter-spacing:-0.02em;color:var(--c-ink);max-width:640px;"><span data-tkey="title">边玩边学的儿童游戏乐园</span></h1>
+        <p style="font-size:16px;color:var(--c-ink-3);max-width:480px;margin:0 0 28px;line-height:1.6;"><span data-tkey="sub">40+ 款 HTML5 与 Python 小游戏，打开浏览器就能玩；从点一点到写代码，让孩子在闯关里自然爱上编程。</span></p>
+        <div style="display:flex;gap:10px;">
+          <div style="padding:11px 22px;background:var(--c-accent);color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:600;"><span data-tkey="ctaPrimary">立即开玩</span></div>
+          <div style="padding:11px 22px;border:1px solid var(--c-border-strong);color:var(--c-ink);border-radius:var(--radius-sm);font-size:13px;font-weight:500;"><span data-tkey="ctaSecondary">看看编程游戏</span></div>
+        </div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="section-title" style="position:absolute;left:96px;right:auto;top:524px;bottom:auto;width:520px;height:64px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;gap:6px;font-family:var(--font-sans);">
+        <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--c-accent);"><span data-tkey="eyebrow">浏览器即开即玩</span></div>
+        <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:32px;line-height:1.15;font-weight:500;color:var(--c-ink);"><span data-tkey="title">HTML5 精选游戏</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:96px;right:auto;top:612px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">5-8 岁 · 难度 ★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">迷宫里的小恐龙</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">用方向键带小恐龙收集星星，躲开滚落的石头。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:416px;right:auto;top:612px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">6-9 岁 · 难度 ★★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">泡泡数学消消乐</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">算对算式就能打爆泡泡，越算越快越上瘾。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:736px;right:auto;top:612px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">7-10 岁 · 难度 ★★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">森林音乐小乐队</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">点击小动物，编一段属于你自己的旋律。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:1056px;right:auto;top:612px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">6-10 岁 · 难度 ★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">彩虹涂色画板</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">手指涂鸦、印章贴纸，一键保存小小作品。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:96px;right:auto;top:876px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">8-12 岁 · 难度 ★★★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">太空单词飞船</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">答对英语单词就能给飞船加速，冲出陨石带。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:416px;right:auto;top:876px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">5-8 岁 · 难度 ★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">小小农场经营</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">种菜、浇水、卖水果，顺手学会简单加减法。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:736px;right:auto;top:876px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">7-11 岁 · 难度 ★★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">积木搭建挑战</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">用各种形状积木，搭出一座摇摇晃晃的小桥。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:1056px;right:auto;top:876px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">HTML5</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">6-9 岁 · 难度 ★★</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">记忆翻翻牌</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">翻开卡片找出相同的伙伴，锻炼专注力与记忆。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">开始游戏 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="section-title" style="position:absolute;left:96px;right:auto;top:1164px;bottom:auto;width:560px;height:64px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;gap:6px;font-family:var(--font-sans);">
+        <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--c-accent);"><span data-tkey="eyebrow">边玩边学编程</span></div>
+        <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:32px;line-height:1.15;font-weight:500;color:var(--c-ink);"><span data-tkey="title">Python 编程小游戏</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:96px;right:auto;top:1252px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">Python</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">9-12 岁 · turtle</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">海龟画图小画家</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">改几行 turtle 代码，就能画出星星和彩虹。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">进入闯关 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:416px;right:auto;top:1252px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">Python</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">10-12 岁 · pygame</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">贪吃蛇重制版</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">自己动手做一条会成长的小蛇，越吃越长。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">进入闯关 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:736px;right:auto;top:1252px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">Python</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">9-12 岁 · 基础语法</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">猜数字机器人</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">写循环与判断，让程序猜出你心里的数字。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">进入闯关 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="card" style="position:absolute;left:1056px;right:auto;top:1252px;bottom:auto;width:288px;height:240px;border-radius:20px;--insp-radius:20px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;font-family:var(--font-sans);box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--c-ink);color:var(--c-surface);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;"><span data-tkey="badge">Python</span></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-4);letter-spacing:0.06em;"><span data-tkey="meta">10-12 岁 · pygame</span></div>
+        </div>
+        <div style="font-size:17px;font-weight:600;color:var(--c-ink);margin-bottom:6px;letter-spacing:-0.01em;"><span data-tkey="title">像素跳跃小鸟</span></div>
+        <div style="font-size:13px;color:var(--c-ink-3);line-height:1.6;flex:1;"><span data-tkey="body">重力、碰撞、计分，做出属于自己的小游戏。</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--c-accent);"><span data-tkey="link">进入闯关 →</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="stats-row" style="position:absolute;left:96px;right:auto;top:1540px;bottom:auto;width:1248px;height:120px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;gap:12px;padding:0 32px;font-family:var(--font-sans);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);">
+        
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:34px;font-weight:500;color:var(--c-ink);line-height:1.1;"><span data-tkey="v1">40+</span></div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);letter-spacing:0.06em;margin-top:4px;"><span data-tkey="l1">在线小游戏</span></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:34px;font-weight:500;color:var(--c-ink);line-height:1.1;"><span data-tkey="v2">12 万+</span></div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);letter-spacing:0.06em;margin-top:4px;"><span data-tkey="l2">小玩家在玩</span></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:34px;font-weight:500;color:var(--c-ink);line-height:1.1;"><span data-tkey="v3">100%</span></div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);letter-spacing:0.06em;margin-top:4px;"><span data-tkey="l3">免费无广告</span></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:34px;font-weight:500;color:var(--c-ink);line-height:1.1;"><span data-tkey="v4">0 元</span></div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);letter-spacing:0.06em;margin-top:4px;"><span data-tkey="l4">家长放心</span></div>
+          </div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="cta-banner" style="position:absolute;left:96px;right:auto;top:1708px;bottom:auto;width:1248px;height:160px;border-radius:24px;--insp-radius:24px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:linear-gradient(120deg,var(--c-accent) 0%,var(--c-accent-deep) 100%);border-radius:var(--radius-xl);padding:0 48px;display:flex;align-items:center;justify-content:space-between;gap:24px;font-family:var(--font-sans);color:#fff;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:30px;font-weight:500;"><span data-tkey="title">每周更新一款新游戏</span></div>
+          <div style="font-size:13px;opacity:0.85;"><span data-tkey="sub">订阅后第一时间收到新关卡和编程小挑战，还有家长陪伴指南。</span></div>
+        </div>
+        <div style="padding:12px 24px;background:#fff;color:var(--c-accent-deep);border-radius:var(--radius-sm);font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.15);"><span data-tkey="cta">免费订阅更新</span></div>
+      </div></div>
+    <div class="el-inner" data-component-layout="flow" data-component-type="footer-classic" style="position:absolute;left:0px;right:auto;top:1916px;bottom:auto;width:1440px;height:200px;overflow:hidden;box-sizing:border-box">
+      <div style="width:100%;height:100%;background:var(--c-surface);border-top:1px solid var(--c-border);padding:28px 32px 0;display:flex;flex-direction:column;font-family:var(--font-sans);">
+        <div style="flex:1;display:flex;gap:56px;">
+          <div style="flex:1.4;min-width:0;">
+            <div style="font-family:var(--font-display);font-style:var(--font-display-style);font-size:20px;font-weight:500;color:var(--c-ink);margin-bottom:6px;"><span data-tkey="brand">童趣游戏屋 🎈</span></div>
+            <div style="font-size:12px;color:var(--c-ink-3);line-height:1.6;max-width:260px;"><span data-tkey="desc">为孩子准备的 HTML5 与 Python 游戏乐园，玩中学，学中玩。</span></div>
+          </div>
+          
+            <div style="flex:1;">
+              <div style="color:var(--c-ink-2);margin-bottom:10px;font-size:11px;font-family:var(--font-mono);letter-spacing:0.06em;text-transform:uppercase;"><span data-tkey="c1t">游戏分类</span></div>
+              <div style="font-size:12px;color:var(--c-ink-3);line-height:2;"><span data-tkey="c1i">HTML5 游戏 · Python 游戏 · 亲子共玩</span></div>
+            </div>
+            <div style="flex:1;">
+              <div style="color:var(--c-ink-2);margin-bottom:10px;font-size:11px;font-family:var(--font-mono);letter-spacing:0.06em;text-transform:uppercase;"><span data-tkey="c2t">学习资源</span></div>
+              <div style="font-size:12px;color:var(--c-ink-3);line-height:2;"><span data-tkey="c2i">编程入门 · 家长指南 · 教师专区</span></div>
+            </div>
+            <div style="flex:1;">
+              <div style="color:var(--c-ink-2);margin-bottom:10px;font-size:11px;font-family:var(--font-mono);letter-spacing:0.06em;text-transform:uppercase;"><span data-tkey="c3t">关于我们</span></div>
+              <div style="font-size:12px;color:var(--c-ink-3);line-height:2;"><span data-tkey="c3i">团队介绍 · 联系方式 · 隐私政策</span></div>
+            </div>
+        </div>
+        <div style="border-top:1px solid var(--c-border-soft,var(--c-border));padding:14px 0;display:flex;justify-content:space-between;font-size:11px;color:var(--c-ink-4);">
+          <span><span data-tkey="copyright">© 2025 童趣游戏屋 · 用心陪孩子长大</span></span>
+          <span style="display:flex;gap:16px;"><span>Privacy</span><span>Terms</span></span>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+</body>
+</html>
