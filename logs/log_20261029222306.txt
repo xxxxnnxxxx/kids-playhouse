@@ -1,0 +1,45 @@
+日志时间：2026-10-29 22:23:06
+主题：修复 make 在 cmd 环境（无 bash 于 PATH）下报错（等待用户确认）
+
+====================================================================
+一、用户反馈（复述）
+====================================================================
+执行 make 报错：
+  系统找不到指定的路径。
+  '{' 不是内部或外部命令，也不是可运行的程序或批处理文件。
+  make: *** [check] 错误 1
+即 Makefile 在用户的终端里无法工作。
+
+====================================================================
+二、根因（已在本机一字不差复现）
+====================================================================
+本机/用户使用的 make 是 GnuWin32 原生 Windows 版（GNU Make 3.81）。
+在 Git Bash 里执行时 PATH 含 sh.exe，make 用 sh 跑脚本，一切正常（我
+此前只在 Git Bash 验证过）；但当用户在 cmd/PowerShell 里执行 make 时，
+PATH 上没有 bash/sh，原生 make 回退用 cmd.exe 执行每个配方行，
+而 Makefile 里写的是 Unix 语法（command -v、{ ...; }、rm -rf、cp -r、
+mkdir -p、SHELL := bash），cmd 全部不认识 → 报出上述错误。
+复现方法：cmd.exe + 剔除 Git 的 PATH（仅留 GnuWin32 与 System32）
+执行 make check，输出与用户完全一致。
+（SHELL := bash 在该 make 上不生效：它只在 PATH 找到 sh.exe 时才用 sh，
+不会按变量值去查找 bash。）
+
+====================================================================
+三、修复方案（重写 Makefile，彻底消除 shell 依赖）
+====================================================================
+原则：所有配方行在 cmd 与 bash 下行为完全一致，不再依赖任何 Unix 命令：
+1. 文件操作（删目录/拷贝/建目录）全部用 node -e "fs.rmSync/cpSync/mkdirSync"
+   完成——node 是本项目硬依赖（前端编译本来就要求），两种 shell 下引号
+   传递行为一致；
+2. go build / npm / cd web && npm install && npm run build 这类命令本身
+   在两种 shell 下通用，保持不变；check 目标简化为 go version + node -v
+   （缺什么会直接报清晰错误）；
+3. make run 改为 go run ./server（避免 ./server.exe 在 cmd 下的路径解析
+   差异）；output/server.exe 仍是部署产物，进 output 目录用任意方式运行；
+4. 移除 SHELL := bash 及 Unix 命令，Linux/macOS 下同样可用。
+验证方案：在复现环境（cmd.exe + 无 Git 的 PATH）跑完整 make 全绿；
+再在 Git Bash 正常环境跑 make clean && make 全绿；make run 启动后 curl
+冒烟 200。目标结构不变：output/server.exe、output/web/dist、output/games。
+
+====================================================================
+状态：等待用户回复"确认/继续"后开工。
