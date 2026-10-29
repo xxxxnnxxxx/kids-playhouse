@@ -32,7 +32,8 @@ export function navigate(path: string) {
 }
 
 function dispatch(path: string) {
-  const clean = path.split('?')[0].replace(/\/+$/, '') || '/'
+  // 去掉查询串与首尾斜杠：'/'、'/html5'、'/play/x/' 分别归一化为 ''、'html5'、'play/x'
+  const clean = path.split('?')[0].replace(/^\/+|\/+$/g, '')
   for (const r of routes) {
     const m = clean.match(r.regex)
     if (m) {
