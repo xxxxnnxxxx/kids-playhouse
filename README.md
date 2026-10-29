@@ -38,6 +38,21 @@ children-games/
 
 环境要求：Go 1.22+、Node 18+。
 
+### 方式一：Makefile 一键构建（推荐）
+
+```bash
+make            # 前端 + 后端 + 游戏资源 → 全部产物在 output/
+cd output && ./server.exe   # Windows；Linux/macOS 下为 ./server
+# 或者一步到位：make run（构建完自动启动）
+
+make clean      # 清理 output/ 与 web/dist
+```
+
+`output/` 目录内容：`server.exe`（Go 服务）、`web/dist`（前端编译产物）、
+`games`（游戏清单与资源）。在 `output/` 内启动即可，服务默认参数正好指向同级目录。
+
+### 方式二：分步构建与运行
+
 ```bash
 # 1) 构建前端（产物在 web/dist，已 gitignore）
 cd web
