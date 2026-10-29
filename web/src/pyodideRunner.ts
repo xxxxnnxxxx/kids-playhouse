@@ -22,13 +22,26 @@ interface PyProxyCallable {
   (...args: unknown[]): unknown
 }
 
+/** Python 命名空间（dict 的 PyProxy），每次运行独立创建，避免游戏间全局变量/回调残留 */
+interface PyNamespace {
+  has(name: string): boolean
+  get(name: string): unknown
+  destroy?(): void
+}
+
+interface RunOptions {
+  globals: PyNamespace
+}
+
 interface PyodideAPI {
-  runPython(code: string): unknown
-  runPythonAsync(code: string): Promise<unknown>
+  runPython(code: string, options?: RunOptions): unknown
+  runPythonAsync(code: string, options?: RunOptions): Promise<unknown>
   setStdout(opts: { batched: (s: string) => void }): void
   setStderr(opts: { batched: (s: string) => void }): void
   setStdin(opts: { stdin: () => string }): void
-  globals: { has(name: string): boolean; get(name: string): unknown }
+  /** 把 JS 对象转为 Python 对象；toPy({}) 即得到一个空 dict 作为新命名空间 */
+  toPy(obj: object): PyNamespace
+  globals: PyNamespace
 }
 
 declare global {
@@ -194,6 +207,7 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
   let raf = 0
   let lastTs = 0
   let frameErrored = false
+  let currentNs: PyNamespace | null = null
 
   function callSafe(fn: PyProxyCallable, ...args: unknown[]): boolean {
     try {
@@ -222,10 +236,10 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
     raf = requestAnimationFrame(frame)
   }
 
-  function startEngine(py: PyodideAPI) {
+  function startEngine(ns: PyNamespace) {
     const get = (name: string): PyProxyCallable | undefined => {
-      if (!py.globals.has(name)) return undefined
-      const fn = py.globals.get(name)
+      if (!ns.has(name)) return undefined
+      const fn = ns.get(name)
       return typeof fn === 'function' ? (fn as PyProxyCallable) : undefined
     }
     engine = {
@@ -277,6 +291,14 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
     const btn = $('pyRun') as HTMLButtonElement
     btn.disabled = true
     stopEngine()
+    // 释放上一次运行的命名空间，并在全新命名空间中执行本次代码：
+    // 避免上一个游戏（如贪吃蛇）的 setup/update/on_key 残留并被引擎误启动
+    try {
+      currentNs?.destroy?.()
+    } catch {
+      /* 已销毁则忽略 */
+    }
+    currentNs = null
     term.clear()
     clearCanvas()
     try {
@@ -286,9 +308,11 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
       py.setStdin({
         stdin: () => window.prompt('程序正在等待输入（input）') ?? '',
       })
-      py.runPython(PYTHON_PRELUDE)
-      await py.runPythonAsync(editorEl.value)
-      startEngine(py)
+      const ns = py.toPy({})
+      currentNs = ns
+      py.runPython(PYTHON_PRELUDE, { globals: ns })
+      await py.runPythonAsync(editorEl.value, { globals: ns })
+      startEngine(ns)
     } catch (err) {
       term.print(formatPyError(err), 'err')
       setStatus('出错啦，看看终端提示')
@@ -321,6 +345,12 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
   teardownCurrent = () => {
     stopEngine()
     window.removeEventListener('keydown', onKeyDown)
+    try {
+      currentNs?.destroy?.()
+    } catch {
+      /* 已销毁则忽略 */
+    }
+    currentNs = null
   }
 
   clearCanvas()
