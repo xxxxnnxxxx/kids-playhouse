@@ -1,4 +1,4 @@
-module children-games/server
+module children-games
 
 go 1.26.6
 

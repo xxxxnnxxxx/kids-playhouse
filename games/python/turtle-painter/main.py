@@ -16,23 +16,25 @@ t.speed(0)
 t.color("gold")
 t.width(3)
 t.penup()
-t.goto(-210, 100)
+t.goto(-210, 55)
 t.pendown()
 for i in range(5):
-    t.forward(170)
+    t.forward(155)
     t.right(144)
 
 # ---- 画一道彩虹 🌈 ----
+# 每条弧都从左端出发，越过头顶落到右端（circle 负半径 = 顺时针转弯）
 colors = ["crimson", "orange", "gold", "mediumseagreen", "dodgerblue", "orchid"]
 t.width(10)
+CX, CY = 120, -80
 for i, c in enumerate(colors):
-    r = 120 - i * 13
+    r = 130 - i * 15
     t.color(c)
     t.penup()
-    t.goto(90 - r, -70)
-    t.setheading(0)
+    t.goto(CX - r, CY)
+    t.setheading(90)
     t.pendown()
-    t.circle(r, 180)
+    t.circle(-r, 180)
 
 # ---- 签个名 ✨ ----
 t.penup()

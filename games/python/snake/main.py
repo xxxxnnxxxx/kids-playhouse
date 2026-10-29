@@ -96,6 +96,7 @@ def step():
 
 def update(dt):
     """每帧调用一次：dt 是距离上一秒的时间（秒）。"""
+    global acc
     if alive:
         acc += dt
         interval = 1.0 / speed
@@ -117,8 +118,8 @@ def draw():
     wg.rect(0, 0, wg.w, TOP - 6, "#06281F")
     wg.text(f"得分 {score}    最佳 {best}", wg.w // 2, TOP // 2 - 4, 16, "#A7F3D0")
     # 苹果
-    fx, fy = cell(food, 5)
-    wg.text("🍎", fx + GRID // 2, fy + GRID // 2 + 1, 15)
+    fx, fy, fw, fh = cell(food, 5)
+    wg.text("🍎", fx + fw / 2, fy + fh / 2 + 1, 15)
     # 蛇身（头深尾浅）
     for i, seg in enumerate(snake):
         color = "#34D399" if i == 0 else ("#10B981" if i % 2 == 0 else "#1EA97C")
