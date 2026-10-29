@@ -1,18 +1,17 @@
 # 童趣游戏屋一键构建 —— 所有产物统一生成在 output/ 目录
 #
-# 常用命令（在仓库根目录执行）：
-#   make         一键构建：前端编译 + Go 编译 + 游戏资源，全部进 output/
-#   make run     一键构建后直接启动服务 → http://localhost:8080
+#   make         一键构建：前端编译 + Go 编译 + 游戏资源 → output/
+#   make run     一键构建后启动本地预览 → http://localhost:8080
 #   make clean   清理 output/ 与 web/dist
 #
-# 环境：Go 1.22+、Node 18+；Windows 请在 Git Bash 中运行 make（或 mingw32-make，
-# 本文件在 Windows 下已强制用 bash 执行命令，rm/cp 等 Unix 命令可用）。
+# 兼容性说明：配方不依赖任何 Unix 命令（rm/cp/mkdir 等），
+# 文件操作统一用 node 完成，因此 Windows cmd / PowerShell / Git Bash
+# 以及 Linux/macOS 下均可直接 make。
 
 ifeq ($(OS),Windows_NT)
-SHELL := bash
-EXE   := server.exe
+EXE := server.exe
 else
-EXE   := server
+EXE := server
 endif
 
 OUTPUT := output
@@ -22,30 +21,26 @@ OUTPUT := output
 all: check web resources server
 
 check:
-	@command -v go >/dev/null 2>&1 || { echo "未找到 go，请先安装 Go 1.22+"; exit 1; }
-	@command -v npm >/dev/null 2>&1 || { echo "未找到 npm，请先安装 Node 18+"; exit 1; }
+	@go version
+	@node -v
 
 # 前端：安装依赖并 Vite 编译，产物拷贝到 output/web/dist
 web:
 	cd web && npm install && npm run build
-	rm -rf $(OUTPUT)/web
-	mkdir -p $(OUTPUT)/web
-	cp -r web/dist $(OUTPUT)/web/dist
+	node -e "const fs=require('fs');fs.rmSync('$(OUTPUT)/web',{recursive:true,force:true});fs.mkdirSync('$(OUTPUT)/web',{recursive:true});fs.cpSync('web/dist','$(OUTPUT)/web/dist',{recursive:true})"
 
 # 游戏资源：清单 + HTML5 + Python 全量拷贝到 output/games
 resources:
-	rm -rf $(OUTPUT)/games
-	cp -r games $(OUTPUT)/games
+	node -e "const fs=require('fs');fs.rmSync('$(OUTPUT)/games',{recursive:true,force:true});fs.cpSync('games','$(OUTPUT)/games',{recursive:true})"
 
 # 后端：编译 Go 二进制到 output/
 server:
-	mkdir -p $(OUTPUT)
+	node -e "require('fs').mkdirSync('$(OUTPUT)',{recursive:true})"
 	go build -o $(OUTPUT)/$(EXE) ./server
 
-# 一键构建并运行：在 output/ 内启动，默认参数 -web web/dist -games games
-# 相对 exe 所在目录，恰好指向 output/web/dist 与 output/games
+# 一键构建并启动本地预览（部署时进入 output/ 直接运行可执行文件）
 run: all
-	cd $(OUTPUT) && ./$(EXE)
+	go run ./server
 
 clean:
-	rm -rf $(OUTPUT) web/dist
+	node -e "const fs=require('fs');fs.rmSync('$(OUTPUT)',{recursive:true,force:true});fs.rmSync('web/dist',{recursive:true,force:true})"

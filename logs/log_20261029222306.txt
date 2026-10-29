@@ -43,3 +43,17 @@ mkdir -p、SHELL := bash），cmd 全部不认识 → 报出上述错误。
 
 ====================================================================
 状态：等待用户回复"确认/继续"后开工。
+
+====================================================================
+执行记录（2026-10-29 22:30，用户已确认）
+====================================================================
+1. 重写 Makefile：移除全部 Unix 命令与 SHELL := bash；文件操作
+   （rmSync/cpSync/mkdirSync）统一由 node -e 完成；check 简化为
+   go version + node -v；make run 改为 go run ./server。
+   cmd / PowerShell / Git Bash / Linux 行为一致。
+2. 验证：
+   a) 复现环境（cmd.exe + PATH 仅 GnuWin32/node/go/System32，无 bash）：
+      make clean && make 完整成功（vite 构建、node 拷贝、go 编译全过）；
+   b) Git Bash 正常环境：make clean && make 成功，output/ 三件套齐全；
+   c) make run 后台启动，curl / 与 /api/v1/games 均 200，已停服清理。
+状态：完成。
