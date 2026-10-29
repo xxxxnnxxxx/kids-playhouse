@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>泡泡数学消消乐</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+    background: #F7F9F4; padding: 14px;
+    font-family: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    color: #1F2937;
+  }
+  .hud {
+    width: 100%; max-width: 600px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
+    padding: 10px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .hud h1 { font-size: 18px; }
+  .hud .tip { font-size: 12px; color: #6B7280; margin-top: 2px; }
+  .hud .stats { font-size: 13px; color: #4B5563; display: flex; gap: 14px; align-items: center; }
+  .hud .stats b { color: #059669; font-size: 16px; }
+  #hearts { font-size: 16px; letter-spacing: 2px; }
+  canvas {
+    border-radius: 16px; border: 1px solid #E5E7EB;
+    background: linear-gradient(180deg, #ECFDF5, #F7F9F4);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    max-width: 100%; height: auto; cursor: pointer; touch-action: manipulation;
+  }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(31,41,55,0.45);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 40;
+  }
+  .overlay.show { display: flex; }
+  .dialog {
+    background: #fff; border-radius: 20px; padding: 32px 36px; text-align: center;
+    max-width: 340px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .dialog .big { font-size: 52px; }
+  .dialog h2 { font-size: 22px; margin: 10px 0 6px; }
+  .dialog p { font-size: 13px; color: #6B7280; margin-bottom: 18px; }
+  .btn {
+    border: 0; background: #10B981; color: #fff; font-weight: 700;
+    font-size: 14px; padding: 11px 26px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: #059669; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>
+      <h1>🫧 泡泡数学消消乐</h1>
+      <div class="tip">点破写着正确答案的泡泡！</div>
+    </div>
+    <div class="stats">
+      <span>得分 <b id="score">0</b></span>
+      <span>连对 <b id="streak">0</b></span>
+      <span id="hearts">❤️❤️❤️</span>
+    </div>
+  </div>
+  <canvas id="cv" width="600" height="640"></canvas>
+  <div class="overlay" id="over">
+    <div class="dialog">
+      <div class="big">🫧</div>
+      <h2>泡泡用完啦</h2>
+      <p id="overText">再挑战一次，一定能更快！</p>
+      <button class="btn" id="retry">再玩一次</button>
+    </div>
+  </div>
+<script>
+(function () {
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var scoreEl = document.getElementById('score');
+  var streakEl = document.getElementById('streak');
+  var heartsEl = document.getElementById('hearts');
+  var overEl = document.getElementById('over');
+  var overText = document.getElementById('overText');
+
+  var COLORS = ['#10B981', '#FB7299', '#F59E0B', '#3B82F6', '#8B5CF6', '#14B8A6'];
+  var TOP_BAR = 92;          // 顶部题目区高度
+  var BUBBLE_COUNT = 6;
+
+  var score, streak, hearts, question, answer, bubbles, pops, speed, over;
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function makeQuestion() {
+    // 随分数提高数字范围：10 内 → 20 内 → 50 内
+    var range = score < 100 ? 10 : score < 300 ? 20 : 50;
+    var a, b, op;
+    if (range === 10) { a = Math.floor(rand(1, 10)); b = Math.floor(rand(1, 10)); op = '+'; }
+    else if (range === 20) {
+      op = Math.random() < 0.5 ? '+' : '-';
+      if (op === '+') { a = Math.floor(rand(5, 15)); b = Math.floor(rand(1, 10)); }
+      else { a = Math.floor(rand(6, 20)); b = Math.floor(rand(1, a)); }
+    } else {
+      op = Math.random() < 0.5 ? '+' : '-';
+      if (op === '+') { a = Math.floor(rand(10, 30)); b = Math.floor(rand(10, 25)); }
+      else { a = Math.floor(rand(20, 50)); b = Math.floor(rand(5, a)); }
+    }
+    question = a + ' ' + op + ' ' + b + ' = ?';
+    answer = op === '+' ? a + b : a - b;
+  }
+
+  function makeNumbers() {
+    // 一个正确答案 + 若干干扰项（相差不大，不能为负、不重复）
+    var nums = [answer];
+    var guard = 0;
+    while (nums.length < BUBBLE_COUNT && guard++ < 200) {
+      var d = Math.floor(rand(1, 6)) * (Math.random() < 0.5 ? 1 : -1);
+      var n = answer + d;
+      if (n >= 0 && nums.indexOf(n) < 0) nums.push(n);
+    }
+    while (nums.length < BUBBLE_COUNT) nums.push(nums.length + 100);
+    // 打乱
+    for (var i = nums.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = nums[i]; nums[i] = nums[j]; nums[j] = t;
+    }
+    return nums;
+  }
+
+  function spawnBubbles() {
+    var nums = makeNumbers();
+    bubbles = nums.map(function (n, i) {
+      return {
+        x: (W / BUBBLE_COUNT) * i + W / (BUBBLE_COUNT * 2),
+        y: H + rand(20, 160),
+        r: rand(30, 38),
+        vy: rand(26, 40),
+        num: n,
+        color: COLORS[i % COLORS.length],
+        wob: rand(0, Math.PI * 2),
+        shake: 0
+      };
+    });
+  }
+
+  function reset() {
+    score = 0; streak = 0; hearts = 3; speed = 1; over = false;
+    makeQuestion();
+    spawnBubbles();
+    pops = [];
+    updateHud();
+    overEl.classList.remove('show');
+  }
+
+  function updateHud() {
+    scoreEl.textContent = score;
+    streakEl.textContent = streak;
+    heartsEl.textContent = hearts > 0 ? '❤️'.repeat(hearts) : '💔';
+  }
+
+  function nextRound(good) {
+    if (good) {
+      score += 10 + streak * 2;
+      streak++;
+      speed = Math.min(2.2, speed + 0.06);
+    } else {
+      streak = 0;
+      hearts--;
+      if (hearts <= 0) {
+        over = true;
+        overText.textContent = '最终得分 ' + score + ' 分，再挑战一次，一定能更快！';
+        overEl.classList.add('show');
+      }
+    }
+    updateHud();
+    if (!over) { makeQuestion(); spawnBubbles(); }
+  }
+
+  function pop(x, y, color, good) {
+    for (var i = 0; i < 10; i++) {
+      pops.push({
+        x: x, y: y,
+        vx: Math.cos((Math.PI * 2 * i) / 10) * rand(60, 160),
+        vy: Math.sin((Math.PI * 2 * i) / 10) * rand(60, 160) - 40,
+        life: 0.6, color: good ? '#10B981' : '#F87171', r: rand(3, 6)
+      });
+    }
+  }
+
+  function canvasPos(ev) {
+    var rect = cv.getBoundingClientRect();
+    var x = ((ev.clientX - rect.left) / rect.width) * W;
+    var y = ((ev.clientY - rect.top) / rect.height) * H;
+    return { x: x, y: y };
+  }
+
+  cv.addEventListener('pointerdown', function (ev) {
+    if (over) return;
+    var p = canvasPos(ev);
+    for (var i = 0; i < bubbles.length; i++) {
+      var b = bubbles[i];
+      var d = Math.hypot(p.x - b.x, p.y - b.y);
+      if (d <= b.r + 6) {
+        if (b.num === answer) {
+          pop(b.x, b.y, b.color, true);
+          nextRound(true);
+        } else {
+          pop(b.x, b.y, b.color, false);
+          b.shake = 0.5;
+          streak = 0;
+          streakEl.textContent = 0;
+          hearts--;
+          updateHud();
+          if (hearts <= 0) {
+            over = true;
+            overText.textContent = '最终得分 ' + score + ' 分，别灰心，再试一次！';
+            overEl.classList.add('show');
+          }
+        }
+        return;
+      }
+    }
+  });
+
+  document.getElementById('retry').addEventListener('click', reset);
+
+  var lastTs = 0;
+  function frame(ts) {
+    var dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+
+    bubbles.forEach(function (b) {
+      b.y -= b.vy * speed * dt;
+      b.wob += dt * 2.4;
+      if (b.shake > 0) b.shake -= dt;
+      if (b.y < TOP_BAR - b.r * 0.4) {
+        // 泡泡飘出顶部就从底部回来
+        b.y = H + b.r + rand(0, 60);
+        b.x = rand(b.r + 8, W - b.r - 8);
+      }
+    });
+    pops = pops.filter(function (p) {
+      p.life -= dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 300 * dt;
+      return p.life > 0;
+    });
+
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function drawBubble(b) {
+    var sx = b.x + (b.shake > 0 ? Math.sin(b.shake * 60) * 5 : 0) + Math.sin(b.wob) * 4;
+    ctx.save();
+    // 泡泡主体
+    var grad = ctx.createRadialGradient(sx - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.2, sx, b.y, b.r);
+    grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+    grad.addColorStop(0.35, b.color + 'CC');
+    grad.addColorStop(1, b.color + '88');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(sx, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // 数字
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 22px "Plus Jakarta Sans", system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(String(b.num), sx, b.y + 1);
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // 顶部题目区
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.roundRect(12, 12, W - 24, TOP_BAR - 24, 14);
+    ctx.fill();
+    ctx.strokeStyle = '#E5E7EB';
+    ctx.stroke();
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '600 13px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('点破正确答案的泡泡', W / 2, 36);
+    ctx.fillStyle = '#1F2937';
+    ctx.font = '700 34px "Plus Jakarta Sans", system-ui';
+    ctx.fillText(question, W / 2, 68);
+
+    bubbles.forEach(drawBubble);
+
+    pops.forEach(function (p) {
+      ctx.globalAlpha = Math.max(p.life / 0.6, 0);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

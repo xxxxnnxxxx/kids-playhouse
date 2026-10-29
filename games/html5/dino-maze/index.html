@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>迷宫里的小恐龙</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+    background: #F7F9F4; padding: 14px;
+    font-family: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    color: #1F2937;
+  }
+  .hud {
+    width: 100%; max-width: 600px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
+    padding: 10px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .hud h1 { font-size: 18px; }
+  .hud .tip { font-size: 12px; color: #6B7280; margin-top: 2px; }
+  .hud .stats { font-size: 13px; color: #4B5563; display: flex; gap: 14px; }
+  .hud .stats b { color: #059669; font-size: 16px; }
+  canvas {
+    border-radius: 16px; border: 1px solid #E5E7EB;
+    background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    max-width: 100%; height: auto; touch-action: none;
+  }
+  .pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 48px); gap: 6px; }
+  .pad button {
+    border: 1px solid #E5E7EB; background: #fff; border-radius: 12px;
+    font-size: 20px; cursor: pointer; color: #1F2937;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .pad button:active { background: #ECFDF5; border-color: #10B981; }
+  .pad .up { grid-column: 2; grid-row: 1; }
+  .pad .left { grid-column: 1; grid-row: 2; }
+  .pad .down { grid-column: 2; grid-row: 2; }
+  .pad .right { grid-column: 3; grid-row: 2; }
+  .toast {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: #1F2937; color: #fff; font-size: 14px; font-weight: 600;
+    padding: 10px 22px; border-radius: 99px; transition: transform 0.25s ease; z-index: 30;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(31,41,55,0.45);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 40;
+  }
+  .overlay.show { display: flex; }
+  .dialog {
+    background: #fff; border-radius: 20px; padding: 32px 36px; text-align: center;
+    max-width: 340px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .dialog .big { font-size: 52px; }
+  .dialog h2 { font-size: 22px; margin: 10px 0 6px; }
+  .dialog p { font-size: 13px; color: #6B7280; margin-bottom: 18px; }
+  .btn {
+    border: 0; background: #10B981; color: #fff; font-weight: 700;
+    font-size: 14px; padding: 11px 26px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: #059669; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>
+      <h1>🦖 迷宫里的小恐龙</h1>
+      <div class="tip">方向键移动，收集全部 ⭐，小心滚动的 🪨！</div>
+    </div>
+    <div class="stats">
+      <span>关卡 <b id="level">1</b></span>
+      <span>星星 <b id="stars">0/0</b></span>
+    </div>
+  </div>
+  <canvas id="cv" width="600" height="440"></canvas>
+  <div class="pad">
+    <button class="up" data-k="up">▲</button>
+    <button class="left" data-k="left">◀</button>
+    <button class="down" data-k="down">▼</button>
+    <button class="right" data-k="right">▶</button>
+  </div>
+  <div class="toast" id="toast">哎呀，撞到石头啦！</div>
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <div class="big" id="ovEmoji">🎉</div>
+      <h2 id="ovTitle">过关啦！</h2>
+      <p id="ovText">你收集到了全部星星</p>
+      <button class="btn" id="ovBtn">下一关</button>
+    </div>
+  </div>
+<script>
+(function () {
+  var COLS = 15, ROWS = 11, CELL = 40;
+  var LEVEL_SEEDS = [20261029, 2026, 1000000]; // 每关固定种子，迷宫保持一致
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var levelEl = document.getElementById('level');
+  var starsEl = document.getElementById('stars');
+  var toast = document.getElementById('toast');
+  var overlay = document.getElementById('overlay');
+
+  var grid, starList, rocks, dino, tween, level, totalStars, gotStars, won;
+
+  // ---- 固定种子随机数（mulberry32），保证每关迷宫每次一样 ----
+  function rngFactory(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // ---- 递归回溯生成完美迷宫（保证全连通） ----
+  function buildMaze(seed) {
+    var rng = rngFactory(seed);
+    var g = [];
+    for (var y = 0; y < ROWS; y++) {
+      var row = [];
+      for (var x = 0; x < COLS; x++) row.push(0); // 0=墙 1=通路
+      g.push(row);
+    }
+    var stack = [[1, 1]];
+    g[1][1] = 1;
+    var DIRS = [[0, -2], [2, 0], [0, 2], [-2, 0]];
+    while (stack.length) {
+      var cur = stack[stack.length - 1];
+      var cx = cur[0], cy = cur[1];
+      var cand = [];
+      for (var i = 0; i < 4; i++) {
+        var nx = cx + DIRS[i][0], ny = cy + DIRS[i][1];
+        if (nx > 0 && nx < COLS - 1 && ny > 0 && ny < ROWS - 1 && !g[ny][nx]) cand.push([nx, ny]);
+      }
+      if (!cand.length) { stack.pop(); continue; }
+      var pick = cand[Math.floor(rng() * cand.length)];
+      g[(cy + pick[1]) / 2][(cx + pick[0]) / 2] = 1;
+      g[pick[1]][pick[0]] = 1;
+      stack.push(pick);
+    }
+    // 随机拆掉几堵墙，形成环路，让路更好走、石头更有意思
+    var extra = 8;
+    for (var j = 0; j < extra; j++) {
+      var wx = 1 + Math.floor(rng() * (COLS - 2));
+      var wy = 1 + Math.floor(rng() * (ROWS - 2));
+      if (!g[wy][wx]) g[wy][wx] = 1;
+    }
+    return g;
+  }
+
+  function openCells() {
+    var list = [];
+    for (var y = 1; y < ROWS - 1; y++)
+      for (var x = 1; x < COLS - 1; x++)
+        if (grid[y][x]) list.push([x, y]);
+    return list;
+  }
+
+  function placeStars(rng) {
+    var cells = openCells().filter(function (c) {
+      return !(c[0] === 1 && c[1] === 1) && (c[0] !== dino.x || c[1] !== dino.y);
+    });
+    var picked = [];
+    var need = 5;
+    // 优先挑彼此离得远的星星
+    while (picked.length < need && cells.length) {
+      var idx = Math.floor(rng() * cells.length);
+      var c = cells.splice(idx, 1)[0];
+      var ok = true;
+      for (var i = 0; i < picked.length; i++) {
+        if (Math.abs(picked[i][0] - c[0]) + Math.abs(picked[i][1] - c[1]) < 4) { ok = false; break; }
+      }
+      if (ok) picked.push(c);
+    }
+    while (picked.length < need && cells.length) picked.push(cells.pop());
+    return picked.map(function (c) { return { x: c[0], y: c[1], got: false }; });
+  }
+
+  // ---- 石头：找较长的横向通路，让石头左右巡逻 ----
+  function placeRocks(rng, count) {
+    var found = [];
+    for (var y = 1; y < ROWS - 1 && found.length < count; y++) {
+      var run = [];
+      for (var x = 1; x < COLS; x++) {
+        if (x < COLS - 1 && grid[y][x]) run.push(x);
+        else {
+          if (run.length >= 6 && y % 2 === 1) {
+            found.push({ y: y, min: run[0], max: run[run.length - 1], x: run[0] + (run.length - 1) / 2, dir: rng() < 0.5 ? 1 : -1 });
+          }
+          run = [];
+        }
+      }
+    }
+    found.slice(0, count).forEach(function (r) { r.speed = 2.2 + level * 0.5; });
+    return found.slice(0, count);
+  }
+
+  function loadLevel(n) {
+    level = n;
+    levelEl.textContent = n;
+    grid = buildMaze(LEVEL_SEEDS[n - 1]);
+    dino = { x: 1, y: 1, px: 1, py: 1 };
+    tween = null;
+    var rng = rngFactory(LEVEL_SEEDS[n - 1] ^ 0x9E3779B9);
+    starList = placeStars(rng);
+    rocks = placeRocks(rng, Math.min(2 + n - 1, 4));
+    totalStars = starList.length;
+    gotStars = 0;
+    won = false;
+    updateHud();
+    overlay.classList.remove('show');
+  }
+
+  function updateHud() {
+    starsEl.textContent = gotStars + '/' + totalStars;
+  }
+
+  function tryMove(dir) {
+    if (tween || won) return;
+    var dx = 0, dy = 0;
+    if (dir === 'up') dy = -1;
+    else if (dir === 'down') dy = 1;
+    else if (dir === 'left') dx = -1;
+    else if (dir === 'right') dx = 1;
+    var nx = dino.x + dx, ny = dino.y + dy;
+    if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || !grid[ny][nx]) return;
+    tween = { fx: dino.x, fy: dino.y, tx: nx, ty: ny, t: 0 };
+    dino.x = nx; dino.y = ny;
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { toast.classList.remove('show'); }, 1400);
+  }
+
+  function hitRock() {
+    showToast('哎呀，撞到石头啦！回到起点再来 🪨');
+    dino.x = 1; dino.y = 1; dino.px = 1; dino.py = 1;
+    tween = null;
+    rocks.forEach(function (r) { r.x = r.min + (r.max - r.min) / 2; });
+  }
+
+  function finishLevel() {
+    won = true;
+    var last = level >= LEVEL_SEEDS.length;
+    document.getElementById('ovEmoji').textContent = last ? '🏆' : '🎉';
+    document.getElementById('ovTitle').textContent = last ? '全部通关！' : '第 ' + level + ' 关完成！';
+    document.getElementById('ovText').textContent = last
+      ? '小恐龙带着星星回家啦，你太厉害了！'
+      : '你收集到了全部 ' + totalStars + ' 颗星星';
+    document.getElementById('ovBtn').textContent = last ? '再玩一遍' : '下一关';
+    overlay.classList.add('show');
+  }
+
+  document.getElementById('ovBtn').addEventListener('click', function () {
+    loadLevel(won ? (level >= LEVEL_SEEDS.length ? 1 : level + 1) : level);
+  });
+
+  var KEYMAP = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right'
+  };
+  window.addEventListener('keydown', function (e) {
+    var k = KEYMAP[e.key];
+    if (k) { e.preventDefault(); tryMove(k); }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.pad button'), function (b) {
+    var fire = function (ev) { ev.preventDefault(); tryMove(b.dataset.k); };
+    b.addEventListener('touchstart', fire, { passive: false });
+    b.addEventListener('mousedown', fire);
+  });
+
+  var lastTs = 0;
+  function frame(ts) {
+    var dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+
+    // 恐龙移动补间
+    if (tween) {
+      tween.t += dt / 0.13;
+      if (tween.t >= 1) {
+        tween.t = 1;
+        dino.px = tween.tx; dino.py = tween.ty;
+        var done = tween;
+        tween = null;
+        // 到达后吃星星
+        starList.forEach(function (s) {
+          if (!s.got && s.x === done.tx && s.y === done.ty) {
+            s.got = true; gotStars++; updateHud();
+            if (gotStars >= totalStars) finishLevel();
+          }
+        });
+      } else {
+        var e = tween.t;
+        dino.px = tween.fx + (tween.tx - tween.fx) * e;
+        dino.py = tween.fy + (tween.ty - tween.fy) * e;
+      }
+    }
+
+    // 石头巡逻
+    if (!won) {
+      rocks.forEach(function (r) {
+        r.x += r.dir * r.speed * dt;
+        if (r.x <= r.min) { r.x = r.min; r.dir = 1; }
+        if (r.x >= r.max) { r.x = r.max; r.dir = -1; }
+        if (Math.round(r.y) === Math.round(dino.py) && Math.abs(r.x - dino.px) < 0.62) hitRock();
+      });
+    }
+
+    draw(ts / 1000);
+    requestAnimationFrame(frame);
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    // 墙与地面
+    for (var y = 0; y < ROWS; y++) {
+      for (var x = 0; x < COLS; x++) {
+        if (grid[y][x]) {
+          ctx.fillStyle = (x + y) % 2 ? '#FBFDF9' : '#F7F9F4';
+          ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+        } else {
+          ctx.fillStyle = '#A7F3D0';
+          ctx.beginPath();
+          ctx.roundRect(x * CELL + 2, y * CELL + 2, CELL - 4, CELL - 4, 7);
+          ctx.fill();
+        }
+      }
+    }
+    // 星星
+    ctx.font = '22px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    starList.forEach(function (s) {
+      if (!s.got) {
+        var bob = Math.sin(t * 4 + s.x) * 3;
+        ctx.fillText('⭐', s.x * CELL + CELL / 2, s.y * CELL + CELL / 2 + bob);
+      }
+    });
+    // 石头
+    rocks.forEach(function (r) {
+      ctx.font = '24px system-ui';
+      ctx.fillText('🪨', r.x * CELL + CELL / 2, r.y * CELL + CELL / 2);
+    });
+    // 恐龙
+    ctx.font = '26px system-ui';
+    ctx.fillText('🦖', dino.px * CELL + CELL / 2, dino.py * CELL + CELL / 2);
+  }
+
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y, x + w, y + h, r);
+      this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+      this.arcTo(x, y, x + w, y, r);
+      this.closePath();
+      return this;
+    };
+  }
+
+  loadLevel(1);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

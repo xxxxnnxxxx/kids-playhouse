@@ -1,0 +1,134 @@
+[
+  {
+    "id": "dino-maze",
+    "type": "html5",
+    "title": "迷宫里的小恐龙",
+    "badge": "HTML5",
+    "meta": "5-8 岁 · 难度 ★",
+    "description": "用方向键带小恐龙收集星星，躲开滚落的石头。",
+    "status": "online",
+    "entry": "/games/html5/dino-maze/index.html",
+    "canvas": false
+  },
+  {
+    "id": "bubble-math",
+    "type": "html5",
+    "title": "泡泡数学消消乐",
+    "badge": "HTML5",
+    "meta": "6-9 岁 · 难度 ★★",
+    "description": "算对算式就能打爆泡泡，越算越快越上瘾。",
+    "status": "online",
+    "entry": "/games/html5/bubble-math/index.html",
+    "canvas": false
+  },
+  {
+    "id": "forest-band",
+    "type": "html5",
+    "title": "森林音乐小乐队",
+    "badge": "HTML5",
+    "meta": "7-10 岁 · 难度 ★★",
+    "description": "点击小动物，编一段属于你自己的旋律。",
+    "status": "coming-soon",
+    "entry": "",
+    "canvas": false
+  },
+  {
+    "id": "rainbow-paint",
+    "type": "html5",
+    "title": "彩虹涂色画板",
+    "badge": "HTML5",
+    "meta": "6-10 岁 · 难度 ★",
+    "description": "手指涂鸦、印章贴纸，一键保存小小作品。",
+    "status": "coming-soon",
+    "entry": "",
+    "canvas": false
+  },
+  {
+    "id": "space-words",
+    "type": "html5",
+    "title": "太空单词飞船",
+    "badge": "HTML5",
+    "meta": "8-12 岁 · 难度 ★★★",
+    "description": "答对英语单词就能给飞船加速，冲出陨石带。",
+    "status": "coming-soon",
+    "entry": "",
+    "canvas": false
+  },
+  {
+    "id": "farm-fun",
+    "type": "html5",
+    "title": "小小农场经营",
+    "badge": "HTML5",
+    "meta": "5-8 岁 · 难度 ★",
+    "description": "种菜、浇水、卖水果，顺手学会简单加减法。",
+    "status": "coming-soon",
+    "entry": "",
+    "canvas": false
+  },
+  {
+    "id": "block-bridge",
+    "type": "html5",
+    "title": "积木搭建挑战",
+    "badge": "HTML5",
+    "meta": "7-11 岁 · 难度 ★★",
+    "description": "用各种形状积木，搭出一座摇摇晃晃的小桥。",
+    "status": "coming-soon",
+    "entry": "",
+    "canvas": false
+  },
+  {
+    "id": "memory-cards",
+    "type": "html5",
+    "title": "记忆翻翻牌",
+    "badge": "HTML5",
+    "meta": "6-9 岁 · 难度 ★★",
+    "description": "翻开卡片找出相同的伙伴，锻炼专注力与记忆。",
+    "status": "online",
+    "entry": "/games/html5/memory-cards/index.html",
+    "canvas": false
+  },
+  {
+    "id": "turtle-painter",
+    "type": "python",
+    "title": "海龟画图小画家",
+    "badge": "Python",
+    "meta": "9-12 岁 · turtle",
+    "description": "改几行 turtle 代码，就能画出星星和彩虹。",
+    "status": "online",
+    "entry": "/games/python/turtle-painter/main.py",
+    "canvas": true
+  },
+  {
+    "id": "snake",
+    "type": "python",
+    "title": "贪吃蛇重制版",
+    "badge": "Python",
+    "meta": "10-12 岁 · pygame",
+    "description": "自己动手做一条会成长的小蛇，越吃越长。",
+    "status": "online",
+    "entry": "/games/python/snake/main.py",
+    "canvas": true
+  },
+  {
+    "id": "guess-number",
+    "type": "python",
+    "title": "猜数字机器人",
+    "badge": "Python",
+    "meta": "9-12 岁 · 基础语法",
+    "description": "写循环与判断，让程序猜出你心里的数字。",
+    "status": "online",
+    "entry": "/games/python/guess-number/main.py",
+    "canvas": false
+  },
+  {
+    "id": "pixel-bird",
+    "type": "python",
+    "title": "像素跳跃小鸟",
+    "badge": "Python",
+    "meta": "10-12 岁 · pygame",
+    "description": "重力、碰撞、计分，做出属于自己的小游戏。",
+    "status": "coming-soon",
+    "entry": "",
+    "canvas": true
+  }
+]
