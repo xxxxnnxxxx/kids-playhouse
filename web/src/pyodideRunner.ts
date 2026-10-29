@@ -96,14 +96,20 @@ function formatPyError(err: unknown): string {
   return lines.slice(-14).join('\n')
 }
 
-/** 挂载 Python 游戏的运行界面（终端 + 画布 + 代码编辑器） */
+/**
+ * 挂载 Python 游戏的运行界面。
+ * 布局按游戏类型自适应：
+ *  - 画布类（canvas: true）：画布与代码编辑器并排，终端为下方紧凑日志条（可折叠）；
+ *  - 控制台类（canvas: false）：终端是主角（大窗口、输入行常驻），编辑器默认收起。
+ * 终端输入行仅当程序定义了 on_input 时才对画布类游戏显示（运行时动态判断）。
+ */
 export async function mountPythonPlay(stage: HTMLElement, game: Game) {
   // 卸载上一个实例的事件与动画帧
   teardownCurrent?.()
   teardownCurrent = null
 
   const wrap = document.createElement('div')
-  wrap.className = 'py-play'
+  wrap.className = `py-play py-play--${game.canvas ? 'canvas' : 'console'}`
   wrap.innerHTML = `
     <div class="py-toolbar">
       <button class="btn" id="pyRun">▶ 运行</button>
@@ -115,19 +121,21 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
       <div class="py-stage${game.canvas ? '' : ' is-hidden'}">
         <canvas id="pyCanvas" width="${CANVAS_W}" height="${CANVAS_H}"></canvas>
       </div>
-      <div class="py-side">
-        <div class="py-term" id="pyTerm">
-          <div class="py-term__lines" id="pyLines"></div>
-          <div class="py-term__input">
-            <input id="pyInput" placeholder="在这里输入，回车发送…" autocomplete="off" />
-            <button id="pySend">发送</button>
-          </div>
-        </div>
-        <div class="py-editor is-collapsed" id="pyEditorBox">
-          <div class="py-editor__bar">
-            <span>main.py（改完代码点「▶ 运行」试试）</span>
-          </div>
-          <textarea id="pyEditor" spellcheck="false"></textarea>
+      <div class="py-editor${game.editorOpen ? '' : ' is-collapsed'}" id="pyEditorBox">
+        <div class="py-editor__bar">main.py（改完代码点「▶ 运行」试试）</div>
+        <textarea id="pyEditor" spellcheck="false"></textarea>
+      </div>
+    </div>
+    <div class="py-term" id="pyTerm">
+      <div class="py-term__head">
+        <span class="py-term__title">终端输出</span>
+        <button class="py-term__toggle" id="pyTermToggle" title="折叠/展开终端">折叠 ▲</button>
+      </div>
+      <div class="py-term__body">
+        <div class="py-term__lines" id="pyLines"></div>
+        <div class="py-term__input" id="pyInputRow">
+          <input id="pyInput" placeholder="在这里输入，回车发送…" autocomplete="off" />
+          <button id="pySend">发送</button>
         </div>
       </div>
     </div>`
@@ -137,11 +145,27 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
   const statusEl = $('pyStatus')
   const linesEl = $('pyLines') as HTMLDivElement
   const inputEl = $('pyInput') as HTMLInputElement
+  const inputRow = $('pyInputRow')
+  const termEl = $('pyTerm')
+  const termToggle = $('pyTermToggle')
   const editorEl = $('pyEditor') as HTMLTextAreaElement
+  const editorBox = $('pyEditorBox')
+  const codeBtn = $('pyCode')
   const canvasEl = $('pyCanvas') as HTMLCanvasElement
   const ctx = canvasEl.getContext('2d')!
 
   const setStatus = (s: string) => (statusEl.textContent = s)
+
+  // ---- 游戏引擎状态 ----
+  let engine: {
+    update?: PyProxyCallable
+    onKey?: PyProxyCallable
+    onInput?: PyProxyCallable
+  } = {}
+  let raf = 0
+  let lastTs = 0
+  let frameErrored = false
+  let currentNs: PyNamespace | null = null
 
   // ---- 终端 ----
   const term = {
@@ -153,11 +177,43 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
         linesEl.appendChild(div)
       })
       linesEl.scrollTop = linesEl.scrollHeight
+      if (cls === 'err') expandTerm() // 出错时自动展开，避免孩子错过报错
     },
     clear() {
       linesEl.innerHTML = ''
     },
   }
+
+  function expandTerm() {
+    termEl.classList.remove('is-collapsed')
+    termToggle.textContent = '折叠 ▲'
+  }
+
+  termToggle.addEventListener('click', () => {
+    const collapsed = termEl.classList.toggle('is-collapsed')
+    termToggle.textContent = collapsed ? '展开 ▼' : '折叠 ▲'
+  })
+
+  // ---- 输入行显隐：控制台游戏常驻；画布游戏仅当程序定义了 on_input ----
+  let inputVisible = !game.canvas
+  function syncInputRow() {
+    const need = !game.canvas || !!engine.onInput
+    if (need && !inputVisible && game.canvas) {
+      term.print('💬 程序在等待输入，已在终端下方显示输入框', 'dim')
+    }
+    inputVisible = need
+    inputRow.classList.toggle('is-hidden', !need)
+  }
+
+  // ---- 代码编辑器 ----
+  function syncCodeBtn() {
+    codeBtn.textContent = editorBox.classList.contains('is-collapsed') ? '👩‍💻 看代码' : '📖 收起代码'
+  }
+  codeBtn.addEventListener('click', () => {
+    editorBox.classList.toggle('is-collapsed')
+    syncCodeBtn()
+  })
+  syncCodeBtn()
 
   // ---- 画布桥（暴露给 Python：from js import __cg）----
   const bridge: CanvasBridge = {
@@ -198,17 +254,6 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
 
   const clearCanvas = () => bridge.clear('#FFFFFF')
 
-  // ---- 游戏引擎状态 ----
-  let engine: {
-    update?: PyProxyCallable
-    onKey?: PyProxyCallable
-    onInput?: PyProxyCallable
-  } = {}
-  let raf = 0
-  let lastTs = 0
-  let frameErrored = false
-  let currentNs: PyNamespace | null = null
-
   function callSafe(fn: PyProxyCallable, ...args: unknown[]): boolean {
     try {
       fn(...args)
@@ -247,6 +292,7 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
       onKey: get('on_key'),
       onInput: get('on_input'),
     }
+    syncInputRow()
     if (engine.onKey || engine.update) {
       setStatus('运行中 ✓（键盘可控制）')
     } else {
@@ -286,11 +332,12 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
     if (e.key === 'Enter') submitInput()
   })
 
-  // ---- 运行 / 重置 / 编辑器 ----
+  // ---- 运行 / 重置 ----
   async function run() {
     const btn = $('pyRun') as HTMLButtonElement
     btn.disabled = true
     stopEngine()
+    syncInputRow()
     // 释放上一次运行的命名空间，并在全新命名空间中执行本次代码：
     // 避免上一个游戏（如贪吃蛇）的 setup/update/on_key 残留并被引擎误启动
     try {
@@ -333,13 +380,11 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
   $('pyRun').addEventListener('click', run)
   $('pyReset').addEventListener('click', async () => {
     stopEngine()
+    syncInputRow()
     term.clear()
     clearCanvas()
     await loadSource()
     setStatus('已重置，点「▶ 运行」开始')
-  })
-  $('pyCode').addEventListener('click', () => {
-    $('pyEditorBox').classList.toggle('is-collapsed')
   })
 
   teardownCurrent = () => {
@@ -354,6 +399,7 @@ export async function mountPythonPlay(stage: HTMLElement, game: Game) {
   }
 
   clearCanvas()
+  syncInputRow()
   await loadSource()
   term.print(`🐍 ${game.title}`)
   term.print(game.description, 'dim')

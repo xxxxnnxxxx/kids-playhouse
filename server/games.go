@@ -14,9 +14,10 @@ type Game struct {
 	Badge       string `json:"badge"` // 卡片左上角徽章，如 "HTML5" / "Python"
 	Meta        string `json:"meta"`  // 卡片右上角说明，如 "6-9 岁 · 难度 ★★"
 	Description string `json:"description"`
-	Status      string `json:"status"` // "online" | "coming-soon"
-	Entry       string `json:"entry"`  // html5: iframe 入口；python: main.py 源码地址
-	Canvas      bool   `json:"canvas"` // python 游戏是否显示画布（猜数字等控制台游戏为 false）
+	Status      string `json:"status"`     // "online" | "coming-soon"
+	Entry       string `json:"entry"`      // html5: iframe 入口；python: main.py 源码地址
+	Canvas      bool   `json:"canvas"`     // python 游戏是否显示画布（猜数字等控制台游戏为 false）
+	EditorOpen  bool   `json:"editorOpen"` // python 游戏代码编辑器是否默认展开（海龟画图为 true）
 }
 
 // LoadManifest 读取游戏清单文件并按清单顺序返回全部游戏。

@@ -96,7 +96,8 @@
     "description": "改几行 turtle 代码，就能画出星星和彩虹。",
     "status": "online",
     "entry": "/games/python/turtle-painter/main.py",
-    "canvas": true
+    "canvas": true,
+    "editorOpen": true
   },
   {
     "id": "snake",
@@ -107,7 +108,8 @@
     "description": "自己动手做一条会成长的小蛇，越吃越长。",
     "status": "online",
     "entry": "/games/python/snake/main.py",
-    "canvas": true
+    "canvas": true,
+    "editorOpen": false
   },
   {
     "id": "guess-number",
@@ -118,7 +120,8 @@
     "description": "写循环与判断，让程序猜出你心里的数字。",
     "status": "online",
     "entry": "/games/python/guess-number/main.py",
-    "canvas": false
+    "canvas": false,
+    "editorOpen": false
   },
   {
     "id": "pixel-bird",
@@ -129,6 +132,7 @@
     "description": "重力、碰撞、计分，做出属于自己的小游戏。",
     "status": "coming-soon",
     "entry": "",
-    "canvas": true
+    "canvas": true,
+    "editorOpen": true
   }
 ]

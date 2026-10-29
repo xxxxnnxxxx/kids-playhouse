@@ -9,4 +9,6 @@ export interface Game {
   entry: string
   /** python 游戏是否需要画布（控制台类游戏为 false） */
   canvas: boolean
+  /** python 游戏代码编辑器是否默认展开 */
+  editorOpen?: boolean
 }
